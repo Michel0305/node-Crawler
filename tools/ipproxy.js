@@ -21,7 +21,13 @@ getIpPage = (ipurl) => {
         decodeEntities: false
     });
     let tableData = $('tbody').html();
-    console.log(tableData);
+    let bbb = []
+    $(tableData).each((i, item) => {
+        let aaa = $(item).text();
+        bbb.push(aaa)
+    })
+
+    console.log(bbb);
 }
 
 getIpPage(config.ipPoolUrl);
