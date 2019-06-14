@@ -31,6 +31,21 @@ mainBasic.menuItems = () => {
     // console.log($(apgeCounts).last('a').attr('href'));
 }
 
+opt =  (proxyhost,proxyport,inurl)=>{
+    return {
+        host:proxyhost,//'这里放代理服务器的ip或者域名',
+        port:proxyport,
+        method:'GET',//这里是发送的方法
+        path:inurl,     //这里是访问的路径        
+        'cache-control': 'no-cache',
+        Connection: 'keep-alive',
+        'accept-encoding': 'gzip, deflate',
+        Host: config.ipHost,
+        'Postman-Token': 'e043707b-d69a-4f73-9f0f-022559fcfae2,89d19a03-2c98-496e-9953-764070123d3e',
+        'Cache-Control': 'no-cache',
+        Accept: '*/*',
+        'User-Agent': 'PostmanRuntime/7.13.0'}
+}
 const menusList = [{ id: 0, name: 'Home', url: 'http://www.66s.cc/index.html' },
     { id: 1, name: '最新50部', url: 'https://www.66s.cc/qian50m.html' },
     { id: 2, name: '喜剧片', url: 'http://www.66s.cc/xijupian/' },
@@ -48,6 +63,7 @@ const menusList = [{ id: 0, name: 'Home', url: 'http://www.66s.cc/index.html' },
 ]
 
 mainBasic.classifyHtml = () => {
+    request('GET', config.indexUrl).getBody().toString()
 
 }
 
