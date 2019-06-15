@@ -165,6 +165,9 @@ filmContent.getMovieUrl = (inUrl) => {
     }
 }
 
+/**
+ * 獲取每一頁li 元素
+ */
 filmContent.getFilmItems = () => {
     let filmItems = sectionalization(filmlist);
     for (let i = 0; i < filmItems.length; i++) {
@@ -182,6 +185,41 @@ filmContent.getFilmItems = () => {
     fs.writeFileSync(`${path.dirname(__dirname)}/data/films.json`, JSON.stringify(config.films));
 }
 
-filmContent.getFilmItems();
+
+filmContent.getfilmDetail = (films) => {
+    for (let i = 0; i < config.proxypool.length; i++) {
+        const el = config.proxypool[i];
+        let filmHtml = '<p>'
+        let $ = cheerio.load(request('GET', films.url, opt(el.ip, el.port, films.url)).getBody().toString(), {
+            decodeEntities: false
+        })
+        $('p', '#post_content').each((index, item) => {
+            let pText = $(item).text().replace(/[ | ]*\t|\r|\n/g, '');
+            let pHtml = $(item).html();
+            if (pText.length !== '' & pText !== null & pHtml.length > 0) {
+                console.log(pHtml.indexOf(' 载地址'))
+                console.log(pHtml)
+            }
+        });
+
+        //console.log($(filmContents).length);
+
+        return;
+    }
+}
+
+filmContent.getFilm = () => {
+    let films = JSON.parse(fs.readFileSync(`${path.dirname(__dirname)}/data/films.json`))
+    for (let i = 0; i < films.length; i++) {
+        const el = films[i];
+        if (i == 5) {
+            filmContent.getfilmDetail(el)
+        }
+    }
+}
+
+filmContent.getFilm();
+
+
 
 module.exports = filmContent
