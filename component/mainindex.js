@@ -7,15 +7,20 @@ var config = require('../config/config');
 var request = require('sync-request');
 var iconv = require('iconv-lite');
 
-var $ = cheerio.load(request('GET', config.indexUrl).getBody().toString(), {
-    // withDomLvl1: true,
-    // normalizeWhitespace: false,
-    // xmlMode: false,
-    decodeEntities: false
-});
+const regexp = /^([hH][tT]{2}[pP]:\/\/|[hH][tT]{2}[pP][sS]:\/\/)(([A-Za-z0-9-~]+).)+([A-Za-z0-9-~\/])+$/;
+
 mainBasic = () => {}
 
+/**
+ * 獲取菜單
+ */
 mainBasic.menuItems = () => {
+    let $ = cheerio.load(request('GET', config.indexUrl).getBody().toString(), {
+        // withDomLvl1: true,
+        // normalizeWhitespace: false,
+        // xmlMode: false,
+        decodeEntities: false
+    });
     let menus = [];
     let items = $('#menus').children('li');
     items.each((i, item) => {
@@ -31,12 +36,15 @@ mainBasic.menuItems = () => {
     // console.log($(apgeCounts).last('a').attr('href'));
 }
 
-opt =  (proxyhost,proxyport,inurl)=>{
+/**
+ * 通過代理池IP 
+ */
+opt = (proxyhost, proxyport, inurl) => {
     return {
-        host:proxyhost,//'这里放代理服务器的ip或者域名',
-        port:proxyport,
-        method:'GET',//这里是发送的方法
-        path:inurl,     //这里是访问的路径        
+        host: proxyhost, //'这里放代理服务器的ip或者域名',
+        port: proxyport,
+        method: 'GET', //这里是发送的方法
+        path: inurl, //这里是访问的路径        
         'cache-control': 'no-cache',
         Connection: 'keep-alive',
         'accept-encoding': 'gzip, deflate',
@@ -44,8 +52,10 @@ opt =  (proxyhost,proxyport,inurl)=>{
         'Postman-Token': 'e043707b-d69a-4f73-9f0f-022559fcfae2,89d19a03-2c98-496e-9953-764070123d3e',
         'Cache-Control': 'no-cache',
         Accept: '*/*',
-        'User-Agent': 'PostmanRuntime/7.13.0'}
+        'User-Agent': 'PostmanRuntime/7.13.0'
+    }
 }
+
 const menusList = [{ id: 0, name: 'Home', url: 'http://www.66s.cc/index.html' },
     { id: 1, name: '最新50部', url: 'https://www.66s.cc/qian50m.html' },
     { id: 2, name: '喜剧片', url: 'http://www.66s.cc/xijupian/' },
@@ -62,12 +72,45 @@ const menusList = [{ id: 0, name: 'Home', url: 'http://www.66s.cc/index.html' },
     { id: 13, name: '旧版6v', url: 'http://www.hao6v.com' }
 ]
 
-mainBasic.classifyHtml = () => {
-    request('GET', config.indexUrl).getBody().toString()
-
+getHtmlPageCnt = (menusUrl) => {
+    for (let i = 0; i < config.proxypool.length; i++) {
+        const el = config.proxypool[i];
+        let $ = cheerio.load(request('GET', menusUrl.url, opt(el.ip, el.port, menusUrl.url)).getBody().toString(), {
+            decodeEntities: false
+        })
+        let hasHref = $('.navigation').children().last().hasClass('pagination');
+        let lastUrl = $('.pagination', '.navigation').children().last().attr('href');
+        if (!hasHref) {
+            menusUrl.pageCnt = 0;
+            return menusUrl
+        }
+        if (typeof(lastUrl) != "undefined" && lastUrl != 0 && lastUrl.match(regexp)) {
+            if (lastUrl.split('_').length <= 0) {
+                menusUrl.pageCnt = 0;
+            } else {
+                if (/^[0-9]+$/.test(lastUrl.split('_')[1].split('.')[0])) {
+                    menusUrl.pageCnt = lastUrl.split('_')[1].split('.')[0];
+                } else {
+                    menusUrl.pageCnt = 0;
+                }
+            }
+            return menusUrl;
+        }
+    }
 }
 
+mainBasic.classifyHtml = () => {
+    let newMenus = []
+    for (let i = 0; i < menusList.length; i++) {
+        const menusUrl = menusList[i];
+        newMenus.push(getHtmlPageCnt(menusUrl));
+    }
+    console.log(newMenus)
+        //  request('GET', config.indexUrl).getBody().toString()
+}
 
-mainBasic.menuItems();
+mainBasic.classifyHtml();
+
+//mainBasic.menuItems();
 
 module.exports = mainBasic;

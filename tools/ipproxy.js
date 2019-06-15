@@ -16,44 +16,42 @@ const options = {
 }
 
 
-getIpPage = (ipurl) => {  
-    console.log(ipurl);
-    var proxyPool = []  
+getIpPage = (ipurl) => {
     let $ = cheerio.load(request('GET', ipurl.toString(), options).getBody().toString(), {
         decodeEntities: false
     });
-    let tableData = $('tbody').html();    
-    $('tr',tableData).each((i,item)=>{
-        let tmpProxyIp ={}
-        $('td',item).each((l,el)=>{
-           if(l == 0){
-            tmpProxyIp.ip=$(el).text().replace(/[ | ]*\t|\r|\n/g,'')
-           }
-           if(l == 1){
-            tmpProxyIp.port=$(el).text().replace(/[ | ]*\t|\r|\n/g,'')
-           }  
-           if(l == 2){
-            proxyPool.push(tmpProxyIp)
-           }           
+    let tableData = $('tbody').html();
+    $('tr', tableData).each((i, item) => {
+        var _ip
+        $('td', item).each((l, el) => {
+            if (l == 0) {
+                _ip = $(el).text().replace(/[ | ]*\t|\r|\n/g, '')
+            }
+            if (l == 1) {
+                let _prot = $(el).text().replace(/[ | ]*\t|\r|\n/g, '')
+                config.proxypool.push({ ip: _ip, port: _prot })
+            }
         })
-    })   
-    return proxyPool
+    })
+    return true
 }
 
-const pageCount = 20;
-const timeArray = [5000,7000,9000]
-getProxyJson = (inUrl,id = 1) => {
-    if(id >= pageCount) return;
+const pageCount = 30;
+const timeArray = [15000, 17000, 19000]
+getProxyJson = (inUrl, id = 1) => {
+    if (id >= pageCount) {
+        console.log(config.proxypool);
+        return;
+    }
     var tmpIpPool = getIpPage(`${inUrl}/index_${id}.html`);
     id = id + 1;
-    if(tmpIpPool == undefined || tmpIpPool == "undefined" || tmpIpPool == ""){
+    if (tmpIpPool == undefined || tmpIpPool == "undefined" || tmpIpPool == "") {
         console.log(config.proxypool);
-    }else{
-        config.proxypool.push(tmpIpPool)
-        setTimeout(()=>{
-            getProxyJson(config.ipPoolUrl,id)
-        },timeArray[Math.random()*2]);
+    } else {
+        setTimeout(() => {
+            getProxyJson(config.ipPoolUrl, id)
+        }, timeArray[Math.random() * 2]);
     }
-   // console.log(tmpIpPool);
+    // console.log(tmpIpPool);
 }
-getProxyJson(config.ipPoolUrl,1);
+getProxyJson(config.ipPoolUrl, 1);
