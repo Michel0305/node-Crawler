@@ -218,7 +218,7 @@ filmContent.getFilm = () => {
     }
 }
 
-filmContent.getFilm();
+// filmContent.getFilm();
 
 
 
